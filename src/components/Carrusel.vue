@@ -106,6 +106,14 @@ function onTouchEnd(e) {
       </div>
     </div>
 
+    <!-- Flechas: visibles en PC, ocultas en móvil vía CSS -->
+    <button class="btn prev" aria-label="Previous image" @click="prevSlide">
+      &#10094;
+    </button>
+    <button class="btn next" aria-label="Next image" @click="nextSlide">
+      &#10095;
+    </button>
+
     <div class="carousel-indicators">
       <span
         v-for="(slide, i) in slides"
@@ -235,6 +243,50 @@ function onTouchEnd(e) {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
+/* Botones flechas */
+.btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  font-size: 27px;
+  font-weight: 300;
+  cursor: pointer;
+  border-radius: 50%;
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.75);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.btn:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.prev {
+  left: 25px;
+}
+.next {
+  right: 25px;
+}
+
+/* Indicadores */
 .carousel-indicators {
   position: absolute;
   bottom: 25px;
@@ -269,10 +321,15 @@ function onTouchEnd(e) {
   background: white;
 }
 
+/* Móvil: oculta flechas, swipe táctil activo */
 @media (max-width: 768px) {
   .carousel {
     height: 55vh;
     min-height: 350px;
+  }
+
+  .btn {
+    display: none;
   }
 
   .carousel-content h1 {
