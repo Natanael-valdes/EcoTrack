@@ -1,9 +1,9 @@
 <script setup>
 import Encabezado from "../components/Encabezado.vue";
-import Footer from "../components/Footer.vue";
+import TrackySystem from "../components/TrackySystem.vue";
 </script>
 
 <template>
-  <Encabezado />
-  <Footer />
+  <encabezado />
+  <TrackySystem />
 </template>

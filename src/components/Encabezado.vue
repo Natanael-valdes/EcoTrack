@@ -38,6 +38,7 @@ function toggleMenu() {
   background-color: #2f4f2f;
   padding: 20px 40px;
   position: relative;
+  z-index: 100;
 }
 .logo {
   color: white;

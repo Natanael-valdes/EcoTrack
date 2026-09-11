@@ -48,7 +48,6 @@ const redes = [
   background-color: #2d5a27;
   color: #ffffff;
   padding-top: 40px;
-  margin-top: 60px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 

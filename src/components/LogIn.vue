@@ -133,8 +133,8 @@ function handleLogin() {
   height: 30px;
   border: 1px solid #ccc;
   border-radius: 18px;
-  margin-bottom: 18px;
-  padding: 2%;
+  margin-bottom: 10px;
+  padding: 5%;
   font-size: 15px;
 }
 

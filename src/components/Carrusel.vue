@@ -9,8 +9,8 @@ const slides = [
     img: img1,
     alt: "Volunteers cleaning a river",
     label: "ECOTRACK",
-    title: "Clean today, <Br>Protect Tomorrow.",
-    text: "Join our comunity amd help create cleaner rivers, greener cities and a healthier planet.",
+    title: "Clean Today.<br>Protect Tomorrow.",
+    text: "Join our community and help create cleaner rivers, greener cities and a healthier planet.",
     btnText: "Go to tracky",
     btnTo: "/tracky",
   },
@@ -21,36 +21,54 @@ const slides = [
     title: "Every Action<br>Counts.",
     text: "Work together with other volunteers and make a real difference in your community.",
     btnText: "Get Involved",
-    btnTo: "#",
+    btnTo: "#Apartados",
   },
   {
     img: img3,
-    alt: "Environmental volunteeringuu",
+    alt: "Environmental volunteering",
     label: "VOLUNTEERING",
     title: "Be Part<br>of the Change.",
     text: "Small actions can inspire big changes. Together, we can build a greener future.",
     btnText: "Explore Activities",
-    btnTo: "#",
+    btnTo: "#voluntariado",
   },
 ];
 
 const activeIndex = ref(0);
+const touchStartX = ref(0);
 
 function nextSlide() {
   activeIndex.value = (activeIndex.value + 1) % slides.length;
 }
 
 function prevSlide() {
-  activeIndex.value = (activeIndex.value - 1) % slides.length;
+  activeIndex.value = (activeIndex.value - 1 + slides.length) % slides.length;
 }
 
 function goToSlide(i) {
   activeIndex.value = i;
 }
+
+function scrollTo(hash) {
+  const el = document.querySelector(hash);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
+function onTouchStart(e) {
+  touchStartX.value = e.touches[0].clientX;
+}
+
+function onTouchEnd(e) {
+  const diff = touchStartX.value - e.changedTouches[0].clientX;
+  if (diff > 50) nextSlide();
+  if (diff < -50) prevSlide();
+}
 </script>
 
 <template>
-  <section class="carousel">
+  <section class="carousel" @touchstart="onTouchStart" @touchend="onTouchEnd">
     <div
       class="slides"
       :style="{ transform: `translateX(-${activeIndex * 100}%)` }"
@@ -67,6 +85,7 @@ function goToSlide(i) {
           <span class="carousel-label">{{ slide.label }}</span>
           <h1 v-html="slide.title"></h1>
           <p>{{ slide.text }}</p>
+
           <router-link
             v-if="slide.btnTo.startsWith('/')"
             :to="slide.btnTo"
@@ -74,19 +93,18 @@ function goToSlide(i) {
           >
             {{ slide.btnText }}
           </router-link>
-          <a v-else :href="slide.btnTo" class="hero-button">{{
-            slide.btnText
-          }}</a>
+
+          <a
+            v-else
+            href="#"
+            class="hero-button"
+            @click.prevent="scrollTo(slide.btnTo)"
+          >
+            {{ slide.btnText }}
+          </a>
         </div>
       </div>
     </div>
-
-    <button class="btn prev" aria-label="Previous image" @click="prevSlide">
-      &#10094;
-    </button>
-    <button class="btn next" aria-label="Next image" @click="nextSlide">
-      &#10095;
-    </button>
 
     <div class="carousel-indicators">
       <span
@@ -110,16 +128,12 @@ function goToSlide(i) {
   background: #173d20;
 }
 
-/* CONTENEDOR */
-
 .slides {
   display: flex;
   width: 100%;
   height: 100%;
   transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
 }
-
-/* SLIDE */
 
 .slide {
   min-width: 100%;
@@ -129,8 +143,6 @@ function goToSlide(i) {
   position: relative;
   overflow: hidden;
 }
-
-/* IMAGEN */
 
 .slide img {
   width: 100%;
@@ -142,15 +154,9 @@ function goToSlide(i) {
   transition: transform 1.2s ease;
 }
 
-/* ZOOM */
-
 .slide.active img {
   transform: scale(1.08);
 }
-
-/* =========================================================
-   DEGRADADO
-========================================================= */
 
 .slide::after {
   content: "";
@@ -167,8 +173,6 @@ function goToSlide(i) {
   z-index: 1;
 }
 
-/* Contenido sobre la imagen del carrucel--------*/
-
 .carousel-content {
   position: absolute;
   z-index: 5;
@@ -179,7 +183,6 @@ function goToSlide(i) {
   color: white;
 }
 
-/* PEQUEÑA ETIQUETA */
 .carousel-label {
   display: inline-block;
   color: #b8e6c1;
@@ -188,8 +191,6 @@ function goToSlide(i) {
   letter-spacing: 3px;
   margin-bottom: 18px;
 }
-
-/* TÍTULO */
 
 .carousel-content h1 {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -201,8 +202,6 @@ function goToSlide(i) {
   text-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
 }
 
-/* DESCRIPCIÓN */
-
 .carousel-content p {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   font-size: clamp(1rem, 1.5vw, 1.2rem);
@@ -211,8 +210,6 @@ function goToSlide(i) {
   color: rgba(255, 255, 255, 0.94);
   margin-bottom: 28px;
 }
-
-/*Boton carrucel*/
 
 .hero-button {
   display: inline-flex;
@@ -237,53 +234,6 @@ function goToSlide(i) {
   transform: translateY(-3px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
-
-/* Botones del carrucel */
-
-.btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 54px;
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: white;
-  font-size: 27px;
-  font-weight: 300;
-  cursor: pointer;
-  border-radius: 50%;
-  transition:
-    background 0.3s ease,
-    transform 0.3s ease,
-    border-color 0.3s ease;
-}
-
-.btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.75);
-  transform: translateY(-50%) scale(1.08);
-}
-
-.btn:active {
-  transform: translateY(-50%) scale(0.94);
-}
-
-.prev {
-  left: 25px;
-}
-
-.next {
-  right: 25px;
-}
-
-/*INdicadores*/
 
 .carousel-indicators {
   position: absolute;
@@ -317,5 +267,20 @@ function goToSlide(i) {
   width: 30px;
   border-radius: 10px;
   background: white;
+}
+
+@media (max-width: 768px) {
+  .carousel {
+    height: 55vh;
+    min-height: 350px;
+  }
+
+  .carousel-content h1 {
+    font-size: 2.2rem;
+  }
+
+  .carousel-content p {
+    font-size: 0.95rem;
+  }
 }
 </style>
