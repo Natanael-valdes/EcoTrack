@@ -45,6 +45,7 @@ const redes = [
 
 <style scoped>
 .main-footer {
+  margin-top: 10px;
   background-color: #2d5a27;
   color: #ffffff;
   padding-top: 40px;

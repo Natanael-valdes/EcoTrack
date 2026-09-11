@@ -3,7 +3,7 @@ import { ref } from "vue";
 
 const menuItems = [
   { nombre: "Home", ruta: "/home" },
-  { nombre: "News", ruta: "/news" },
+  { nombre: "EcoNews", ruta: "/EcoNews" },
   { nombre: "EcoCraft", ruta: "/ecocraft" },
   { nombre: "Map", ruta: "/map" },
   { nombre: "About Us", ruta: "/about" },

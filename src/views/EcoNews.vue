@@ -1,11 +1,13 @@
 <script setup>
 import Encabezado from "../components/Encabezado.vue";
 import Footer from "../components/Footer.vue";
-import TrackySystem from "../components/TrackySystem.vue";
+import FormPost from "../components/FormPost.vue";
+import PostFeed from "../components/PostFeed.vue";
 </script>
 
 <template>
   <encabezado />
-  <TrackySystem />
+  <FormPost />
+  <PostFeed />
   <Footer />
 </template>

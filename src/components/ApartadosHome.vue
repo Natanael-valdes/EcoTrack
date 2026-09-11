@@ -12,7 +12,7 @@
       <p>TRack your activity to help the planet.</p>
     </a>
 
-    <a href="PostPage.html" class="tarjeta">
+    <a href="/EcoNews" class="tarjeta">
       <img
         src="../assets/IMG/limpieza-rio-Andarax-1280x640.jpg"
         alt="Garbage Reports"
@@ -23,7 +23,7 @@
       <p>Report places where garbage has accumulated.</p>
     </a>
 
-    <a href="handcraftPage.html" class="tarjeta">
+    <a href="/ecocraft" class="tarjeta">
       <img src="../assets/IMG/images.jpg" alt="EcoCraft" />
 
       <h2>EcoCraft</h2>
