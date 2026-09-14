@@ -5,6 +5,8 @@ import EcoCraft from "../views/EcoCraft.vue";
 import Tracky from "../views/tracky.vue";
 import FormVol from "../views/formVol.vue";
 import EcoNews from "../views/EcoNews.vue";
+import EcoMap from "../views/EcoMap.vue";
+import AboutUs from "../views/AboutUs.vue";
 
 const routes = [
   { path: "/", component: LogIn },
@@ -13,6 +15,8 @@ const routes = [
   { path: "/tracky", component: Tracky },
   { path: "/formVol", component: FormVol },
   { path: "/EcoNews", component: EcoNews },
+  { path: "/map", component: EcoMap },
+  { path: "/about", component: AboutUs },
 ];
 
 const router = createRouter({

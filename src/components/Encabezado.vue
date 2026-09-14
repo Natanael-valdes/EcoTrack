@@ -5,7 +5,7 @@ const menuItems = [
   { nombre: "Home", ruta: "/home" },
   { nombre: "EcoNews", ruta: "/EcoNews" },
   { nombre: "EcoCraft", ruta: "/ecocraft" },
-  { nombre: "Map", ruta: "/map" },
+  { nombre: "EcoMap", ruta: "/map" },
   { nombre: "About Us", ruta: "/about" },
   { nombre: "Profile", ruta: "/profile" },
 ];
