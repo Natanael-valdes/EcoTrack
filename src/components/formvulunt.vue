@@ -1,131 +1,244 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import { useVolunteersStore } from "../stores/volunteers";
 
 const router = useRouter();
+const authStore = useAuthStore();
+const volunteersStore = useVolunteersStore();
 
-// Estado reactivo para los checkboxes (reemplaza document.querySelectorAll)
-const tieneAlergia = ref(null); // null = sin seleccionar, true = sí, false = no
-
-// Campos del formulario
+/* =========================================================
+   ESTADO DEL FORMULARIO
+   ========================================================= */
+const tieneAlergia = ref(null);
 const nombre = ref("");
 const apellido = ref("");
 const fechaNacimiento = ref("");
 const email = ref("");
 const alergias = ref("");
 
+const enviado = ref(false);
+const errorMsg = ref("");
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
 function seleccionarAlergia(valor) {
-  // Comportamiento tipo radio: solo uno puede estar activo
   tieneAlergia.value = valor;
 }
 
-function enviarFormulario() {
-  alert("Volunteer form sent successfully!");
-  router.push("/home");
+function irALogin() {
+  router.push("/login");
 }
+
+async function enviarFormulario() {
+  errorMsg.value = "";
+
+  // Validaciones
+  if (tieneAlergia.value === null) {
+    errorMsg.value = "Por favor indica si tienes alergias";
+    return;
+  }
+
+  try {
+    await volunteersStore.submitApplication({
+      name: nombre.value.trim(),
+      lastName: apellido.value.trim(),
+      birthDate: fechaNacimiento.value,
+      email: email.value.trim(),
+      hasAllergies: tieneAlergia.value,
+      allergiesDetail: alergias.value.trim(),
+    });
+
+    enviado.value = true;
+
+    // Redirigir tras 2 segundos
+    setTimeout(() => {
+      router.push("/home");
+    }, 2000);
+  } catch (err) {
+    errorMsg.value = err.message || "No se pudo enviar la solicitud";
+  }
+}
+
+/* =========================================================
+   LIFECYCLE
+   ========================================================= */
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await volunteersStore.checkExisting();
+  }
+});
 </script>
 
 <template>
   <div class="page-wrapper">
     <div class="contenedor-base">
-      <!-- Encabezado -->
-      <div class="form-header">
-        <h3>Join as a Volunteer</h3>
-        <p class="form-subtitle">Help us make a difference in your community</p>
+      <!-- ==================================================
+           SIN SESIÓN → mensaje bloqueado
+           ================================================== -->
+      <div v-if="!authStore.isAuthenticated" class="locked-state">
+        <span class="locked-icon"></span>
+        <h3>Inicia sesión para aplicar</h3>
+        <p class="form-subtitle">
+          Necesitas una cuenta para enviar tu solicitud como voluntario.
+        </p>
+        <button class="botoncito locked-btn" @click="irALogin">
+          Iniciar sesión
+        </button>
+        <router-link to="/home" class="textoUnderline">
+          ← Back to Home
+        </router-link>
       </div>
 
-      <form @submit.prevent="enviarFormulario" class="formulario-log">
-        <!-- Nombre y Apellido en fila -->
-        <div class="input-row">
-          <div class="input-group">
-            <label>Name</label>
+      <!-- ==================================================
+           CON SESIÓN → formulario
+           ================================================== -->
+      <template v-else>
+        <!-- Ya enviada -->
+        <div v-if="enviado" class="success-state">
+          <span class="success-icon">✅</span>
+          <h3>¡Solicitud enviada!</h3>
+          <p class="form-subtitle">
+            Gracias por querer ser voluntario. Te contactaremos pronto.
+          </p>
+        </div>
+
+        <!-- Ya aplicó antes -->
+        <div v-else-if="volunteersStore.alreadyApplied" class="success-state">
+          <span class="success-icon">📩</span>
+          <h3>Ya enviaste tu solicitud</h3>
+          <p class="form-subtitle">
+            Hemos recibido tus datos. Pronto nos pondremos en contacto.
+          </p>
+          <router-link to="/home" class="textoUnderline">
+            ← Back to Home
+          </router-link>
+        </div>
+
+        <!-- Formulario -->
+        <template v-else>
+          <div class="form-header">
+            <h3>Join as a Volunteer</h3>
+            <p class="form-subtitle">
+              Help us make a difference in your community
+            </p>
+          </div>
+
+          <form @submit.prevent="enviarFormulario" class="formulario-log">
+            <!-- Nombre y Apellido -->
+            <div class="input-row">
+              <div class="input-group">
+                <label>Name</label>
+                <input
+                  v-model="nombre"
+                  type="text"
+                  placeholder="Your name"
+                  class="cajita-texto"
+                  required
+                />
+              </div>
+              <div class="input-group">
+                <label>Last Name</label>
+                <input
+                  v-model="apellido"
+                  type="text"
+                  placeholder="Your last name"
+                  class="cajita-texto"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Fecha de nacimiento -->
+            <div class="input-group full">
+              <label>Date of Birth</label>
+              <input
+                v-model="fechaNacimiento"
+                type="date"
+                class="cajita-texto"
+                required
+              />
+            </div>
+
+            <!-- Email -->
+            <div class="input-group full">
+              <label>Email</label>
+              <input
+                v-model="email"
+                type="email"
+                placeholder="example@gmail.com"
+                class="cajita-texto"
+                required
+              />
+            </div>
+
+            <!-- Alergias -->
+            <div class="allergy-section">
+              <p class="allergy-label">Do you have any allergies?</p>
+              <div class="allergy-options">
+                <label
+                  class="option-btn"
+                  :class="{ selected: tieneAlergia === true }"
+                  @click="seleccionarAlergia(true)"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="tieneAlergia === true"
+                    hidden
+                  />
+                  ✓ Yes
+                </label>
+                <label
+                  class="option-btn"
+                  :class="{ selected: tieneAlergia === false }"
+                  @click="seleccionarAlergia(false)"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="tieneAlergia === false"
+                    hidden
+                  />
+                  ✗ No
+                </label>
+              </div>
+
+              <div v-if="tieneAlergia === true" class="extra-field">
+                <input
+                  v-model="alergias"
+                  type="text"
+                  placeholder="Describe your allergies..."
+                  class="cajita-texto"
+                />
+              </div>
+            </div>
+
+            <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+
             <input
-              v-model="nombre"
-              type="text"
-              placeholder="Your name"
-              class="cajita-texto"
-              required
+              type="submit"
+              :value="
+                volunteersStore.loading ? 'Sending...' : 'Send Application'
+              "
+              class="botoncito"
+              :disabled="volunteersStore.loading"
             />
-          </div>
-          <div class="input-group">
-            <label>Last Name</label>
-            <input
-              v-model="apellido"
-              type="text"
-              placeholder="Your last name"
-              class="cajita-texto"
-              required
-            />
-          </div>
-        </div>
+          </form>
 
-        <!-- Fecha de nacimiento -->
-        <div class="input-group full">
-          <label>Date of Birth</label>
-          <input
-            v-model="fechaNacimiento"
-            type="date"
-            class="cajita-texto"
-            required
-          />
-        </div>
-
-        <!-- Email -->
-        <div class="input-group full">
-          <label>Email</label>
-          <input
-            v-model="email"
-            type="email"
-            placeholder="example@gmail.com"
-            class="cajita-texto"
-            required
-          />
-        </div>
-
-        <!-- Alergias -->
-        <div class="allergy-section">
-          <p class="allergy-label">Do you have any allergies?</p>
-          <div class="allergy-options">
-            <label
-              class="option-btn"
-              :class="{ selected: tieneAlergia === true }"
-              @click="seleccionarAlergia(true)"
-            >
-              <input type="checkbox" :checked="tieneAlergia === true" hidden />
-              ✓ Yes
-            </label>
-            <label
-              class="option-btn"
-              :class="{ selected: tieneAlergia === false }"
-              @click="seleccionarAlergia(false)"
-            >
-              <input type="checkbox" :checked="tieneAlergia === false" hidden />
-              ✗ No
-            </label>
-          </div>
-
-          <!-- Campo extra si selecciona Sí (reemplaza display:none con v-if) -->
-          <div v-if="tieneAlergia === true" class="extra-field">
-            <input
-              v-model="alergias"
-              type="text"
-              placeholder="Describe your allergies..."
-              class="cajita-texto"
-            />
-          </div>
-        </div>
-
-        <input type="submit" value="Send Application" class="botoncito" />
-      </form>
-
-      <router-link to="/home" class="textoUnderline"
-        >← Back to Home</router-link
-      >
+          <router-link to="/home" class="textoUnderline">
+            ← Back to Home
+          </router-link>
+        </template>
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* =========================================================
+   TU CSS ORIGINAL
+   ========================================================= */
 .page-wrapper {
   min-height: 100vh;
   background: white;
@@ -144,7 +257,6 @@ function enviarFormulario() {
   max-width: 520px;
 }
 
-/* Encabezado del formulario */
 .form-header {
   text-align: center;
   margin-bottom: 30px;
@@ -162,14 +274,12 @@ function enviarFormulario() {
   margin: 0;
 }
 
-/* Formulario */
 .formulario-log {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-/* Fila de dos columnas */
 .input-row {
   display: flex;
   gap: 15px;
@@ -192,7 +302,6 @@ function enviarFormulario() {
   margin-bottom: 6px;
 }
 
-/* Inputs */
 .cajita-texto {
   height: 42px;
   border: 1.5px solid #ddd;
@@ -211,7 +320,6 @@ function enviarFormulario() {
   box-shadow: 0 0 0 3px rgba(45, 147, 94, 0.1);
 }
 
-/* Sección de alergias */
 .allergy-section {
   margin-bottom: 15px;
 }
@@ -268,7 +376,6 @@ function enviarFormulario() {
   }
 }
 
-/* Botón enviar */
 .botoncito {
   height: 48px;
   background-color: #2d935e;
@@ -285,12 +392,16 @@ function enviarFormulario() {
     transform 0.2s;
 }
 
-.botoncito:hover {
+.botoncito:hover:not(:disabled) {
   background-color: #267a4d;
   transform: translateY(-2px);
 }
 
-/* Link de regreso */
+.botoncito:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .textoUnderline {
   text-align: center;
   display: block;
@@ -306,7 +417,46 @@ function enviarFormulario() {
   text-decoration: underline;
 }
 
-/* Responsivo */
+/* =========================================================
+   NUEVOS ESTADOS
+   ========================================================= */
+.locked-state,
+.success-state {
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+
+.locked-icon,
+.success-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.locked-state h3,
+.success-state h3 {
+  color: #2d5a27;
+  font-size: 1.4rem;
+  margin: 0 0 0.5rem;
+}
+
+.locked-btn {
+  width: 100%;
+  margin-top: 1.25rem !important;
+}
+
+.error-msg {
+  margin: 5px 0 12px;
+  padding: 0.55rem 0.9rem;
+  background: #fdecea;
+  border: 1px solid #f5c6c2;
+  border-radius: 10px;
+  color: #b03a2e;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Responsive */
 @media (max-width: 500px) {
   .input-row {
     flex-direction: column;

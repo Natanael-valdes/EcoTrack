@@ -1,12 +1,17 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import { useTrackyStore } from "../stores/tracky";
 
-// ─── Estado reactivo (reemplaza localStorage por ahora) ───
-const points = ref(parseInt(localStorage.getItem("ecoPoints")) || 0);
-const history = ref(JSON.parse(localStorage.getItem("ecoHistory")) || []);
-const selectedAction = ref("10"); // valor por defecto del select
+const router = useRouter();
+const authStore = useAuthStore();
+const trackyStore = useTrackyStore();
 
-// ─── Acciones disponibles ───
+const selectedAction = ref("10");
+const submitting = ref(false);
+const localError = ref("");
+
 const acciones = [
   { value: "10", label: "Reusable bottle / thermos (+10 pts)" },
   { value: "20", label: "Public transport or bike (+20 pts)" },
@@ -14,123 +19,158 @@ const acciones = [
   { value: "50", label: "Planted a tree or cared for plants (+50 pts)" },
 ];
 
-// ─── Nivel y badge calculados automáticamente según los puntos ───
-const levelInfo = computed(() => {
-  if (points.value >= 300) return { title: "Earth Guardian", badge: "🌍" };
-  if (points.value >= 150) return { title: "Urban Forest", badge: "🌳" };
-  if (points.value >= 50) return { title: "Eco Friend", badge: "🌿" };
-  return { title: "Beginner", badge: "🌱" };
-});
-
-// ─── Medallas desbloqueadas ───
+/* =========================================================
+   BADGES
+   ========================================================= */
 const badges = computed(() => [
   {
     id: 1,
     icon: "🌱",
     label: "Beginner",
     req: 10,
-    unlocked: points.value >= 10,
+    unlocked: trackyStore.points >= 10,
   },
   {
     id: 2,
     icon: "🌿",
     label: "Eco Friend",
     req: 50,
-    unlocked: points.value >= 50,
+    unlocked: trackyStore.points >= 50,
   },
   {
     id: 3,
     icon: "🌳",
     label: "Urban Forest",
     req: 150,
-    unlocked: points.value >= 150,
+    unlocked: trackyStore.points >= 150,
   },
   {
     id: 4,
     icon: "🌍",
     label: "Earth Guardian",
     req: 300,
-    unlocked: points.value >= 300,
+    unlocked: trackyStore.points >= 300,
   },
 ]);
 
-// ─── Registrar una acción ───
-function logAction() {
+/* =========================================================
+   REGISTRAR ACCIÓN
+   ========================================================= */
+async function logAction() {
+  localError.value = "";
+
+  if (!authStore.isAuthenticated) {
+    localError.value = "Debes iniciar sesión para registrar acciones";
+    return;
+  }
+
   const accion = acciones.find((a) => a.value === selectedAction.value);
+  if (!accion) return;
+
   const pts = parseInt(accion.value);
-  const texto = accion.label.split(" (")[0];
+  const label = accion.label.split(" (")[0];
 
-  points.value += pts;
-  history.value.unshift({ text: texto, pts });
+  submitting.value = true;
 
-  // Guardar en localStorage
-  localStorage.setItem("ecoPoints", points.value);
-  localStorage.setItem("ecoHistory", JSON.stringify(history.value));
+  try {
+    await trackyStore.logAction(label, pts);
+  } catch (err) {
+    localError.value = err.message || "Error al registrar la acción";
+  } finally {
+    submitting.value = false;
+  }
 }
+
+function irALogin() {
+  router.push("/login");
+}
+
+/* =========================================================
+   CARGAR AL MONTAR
+   ========================================================= */
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    trackyStore.loadTracky();
+  }
+});
 </script>
 
 <template>
   <main class="tracker-container">
     <h1 class="tracker-title">Eco Action Tracker</h1>
 
-    <!-- Tarjeta de Estado -->
-    <div class="tracker-card status-card">
-      <div class="user-badge">{{ levelInfo.badge }}</div>
-      <div class="user-info">
-        <h2>{{ levelInfo.title }}</h2>
-        <p class="points-text">
-          Total Points: <span>{{ points }}</span> pts
-        </p>
-      </div>
+    <!-- ===== SIN SESIÓN ===== -->
+    <div v-if="!authStore.isAuthenticated" class="tracker-card guest-card">
+      <span class="guest-icon"></span>
+      <h3>Inicia sesión para usar el Tracker</h3>
+      <p>Necesitas una cuenta para guardar tus puntos y medallas.</p>
+      <button class="login-btn" @click="irALogin">Iniciar sesión</button>
     </div>
 
-    <!-- Formulario -->
-    <div class="tracker-card">
-      <h3>Register a Green Action</h3>
-      <div class="action-form">
-        <select v-model="selectedAction">
-          <option
-            v-for="accion in acciones"
-            :key="accion.value"
-            :value="accion.value"
-          >
-            {{ accion.label }}
-          </option>
-        </select>
-        <button type="button" @click="logAction">Log Action</button>
-      </div>
-    </div>
-
-    <!-- Medallas -->
-    <div class="tracker-card">
-      <h3>Badges & Achievements</h3>
-      <div class="badges-grid">
-        <div
-          v-for="badge in badges"
-          :key="badge.id"
-          class="badge-item"
-          :class="badge.unlocked ? 'unlocked' : 'locked'"
-        >
-          <span class="badge-icon">{{ badge.icon }}</span>
-          <p>{{ badge.label }}</p>
-          <small>Reach {{ badge.req }} pts</small>
+    <!-- ===== CON SESIÓN ===== -->
+    <template v-else>
+      <!-- Estado -->
+      <div class="tracker-card status-card">
+        <div class="user-badge">{{ trackyStore.levelInfo.badge }}</div>
+        <div class="user-info">
+          <h2>{{ trackyStore.levelInfo.title }}</h2>
+          <p class="points-text">
+            Total Points: <span>{{ trackyStore.points }}</span> pts
+          </p>
         </div>
       </div>
-    </div>
 
-    <!-- Historial -->
-    <div class="tracker-card">
-      <h3>Recent Activity</h3>
-      <ul class="history-list">
-        <li v-if="history.length === 0" class="empty-msg">
-          No actions registered yet.
-        </li>
-        <li v-for="(item, i) in history" :key="i">
-          <span>{{ item.text }}</span>
-          <span class="history-pts">+{{ item.pts }} pts</span>
-        </li>
-      </ul>
-    </div>
+      <!-- Formulario -->
+      <div class="tracker-card">
+        <h3>Register a Green Action</h3>
+        <div class="action-form">
+          <select v-model="selectedAction" :disabled="submitting">
+            <option
+              v-for="accion in acciones"
+              :key="accion.value"
+              :value="accion.value"
+            >
+              {{ accion.label }}
+            </option>
+          </select>
+          <button type="button" :disabled="submitting" @click="logAction">
+            {{ submitting ? "Saving..." : "Log Action" }}
+          </button>
+        </div>
+        <p v-if="localError" class="error-msg">{{ localError }}</p>
+      </div>
+
+      <!-- Medallas -->
+      <div class="tracker-card">
+        <h3>Badges & Achievements</h3>
+        <div class="badges-grid">
+          <div
+            v-for="badge in badges"
+            :key="badge.id"
+            class="badge-item"
+            :class="badge.unlocked ? 'unlocked' : 'locked'"
+          >
+            <span class="badge-icon">{{ badge.icon }}</span>
+            <p>{{ badge.label }}</p>
+            <small>Reach {{ badge.req }} pts</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial -->
+      <div class="tracker-card">
+        <h3>Recent Activity</h3>
+        <ul class="history-list">
+          <li v-if="trackyStore.history.length === 0" class="empty-msg">
+            No actions registered yet.
+          </li>
+          <li v-for="item in trackyStore.history" :key="item.id">
+            <span>{{ item.label }}</span>
+            <span class="history-pts">+{{ item.points }} pts</span>
+          </li>
+        </ul>
+      </div>
+    </template>
   </main>
 </template>
 
@@ -163,7 +203,47 @@ function logAction() {
   padding-bottom: 10px;
 }
 
-/* Tarjeta de Nivel y Puntos */
+/* ===== Guest ===== */
+.guest-card {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.guest-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.guest-card h3 {
+  border: none;
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.guest-card p {
+  color: #6b7280;
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+
+.login-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #388e3c;
+}
+
+/* ===== Status Card ===== */
 .status-card {
   display: flex;
   align-items: center;
@@ -197,7 +277,7 @@ function logAction() {
   font-size: 1.3rem;
 }
 
-/* Formulario */
+/* ===== Formulario ===== */
 .action-form {
   display: flex;
   gap: 15px;
@@ -225,11 +305,27 @@ function logAction() {
   transition: background-color 0.2s ease;
 }
 
-.action-form button:hover {
+.action-form button:hover:not(:disabled) {
   background-color: #1e3d1a;
 }
 
-/* Grilla de Emblemas */
+.action-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  margin: 12px 0 0;
+  padding: 0.55rem 0.9rem;
+  background: #fdecea;
+  border: 1px solid #f5c6c2;
+  border-radius: 8px;
+  color: #b03a2e;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ===== Badges ===== */
 .badges-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -261,7 +357,6 @@ function logAction() {
   color: #777;
 }
 
-/* Estilo para Emblemas Bloqueados */
 .badge-item.locked {
   opacity: 0.4;
   filter: grayscale(100%);
@@ -274,7 +369,7 @@ function logAction() {
   border-color: #a8e6cf;
 }
 
-/* Historial */
+/* ===== Historial ===== */
 .history-list {
   list-style: none;
   padding: 0;
@@ -296,5 +391,23 @@ function logAction() {
 .history-pts {
   font-weight: bold;
   color: #2d5a27;
+}
+
+.empty-msg {
+  color: #888;
+  justify-content: center !important;
+  font-style: italic;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .status-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .action-form button {
+    width: 100%;
+  }
 }
 </style>

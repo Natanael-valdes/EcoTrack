@@ -4,11 +4,13 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { usePostsStore } from "../stores/posts";
 import { useProfilesStore } from "../stores/profiles";
+import { useTrackyStore } from "../stores/tracky";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const postsStore = usePostsStore();
 const profilesStore = useProfilesStore();
+const trackyStore = useTrackyStore();
 
 /* =========================================================
    ESTADO — AVATAR
@@ -130,6 +132,7 @@ async function handleLogout() {
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     await profilesStore.loadProfile();
+    await trackyStore.loadTracky();
   }
   if (postsStore.posts.length === 0) {
     postsStore.loadPosts();
@@ -218,6 +221,21 @@ onMounted(async () => {
 
     <p v-if="uploadError" class="upload-error">{{ uploadError }}</p>
 
+    <!-- ================= RANGO ================= -->
+    <a href="/tracky">
+      <div class="rank-banner">
+        <div class="rank-badge">{{ trackyStore.levelInfo.badge }}</div>
+        <div class="rank-text">
+          <span class="rank-label">Your rank</span>
+          <span class="rank-title">{{ trackyStore.levelInfo.title }}</span>
+        </div>
+        <div class="rank-points">
+          <span class="rank-pts">{{ trackyStore.points }}</span>
+          <span class="rank-pts-label">pts</span>
+        </div>
+      </div>
+    </a>
+
     <!-- ================= STATS ================= -->
     <div class="stats">
       <div class="stat">
@@ -244,6 +262,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+a {
+  text-decoration: none;
+}
+
 /* =========================================================
    CARD
    ========================================================= */
@@ -267,7 +289,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 /* ===== AVATAR ===== */
@@ -461,7 +483,7 @@ onMounted(async () => {
 }
 
 .upload-error {
-  margin: -1rem 0 1rem;
+  margin: 0 0 1rem;
   padding: 0.65rem 0.9rem;
   background: #fdecea;
   border: 1px solid #f5c6c2;
@@ -469,6 +491,72 @@ onMounted(async () => {
   color: #b03a2e;
   font-size: 0.85rem;
   text-align: center;
+}
+
+/* =========================================================
+   RANGO
+   ========================================================= */
+.rank-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #eef7ed 0%, #d8ebd6 100%);
+  border: 1px solid #c8e6c9;
+  border-radius: 14px;
+}
+
+.rank-badge {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.rank-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.rank-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e3d1a;
+  letter-spacing: -0.01em;
+}
+
+.rank-points {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.rank-pts {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2d5a27;
+  line-height: 1;
+}
+
+.rank-pts-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  font-weight: 600;
+  margin-top: 0.15rem;
 }
 
 /* =========================================================
@@ -568,6 +656,22 @@ onMounted(async () => {
 
   .info {
     width: 100%;
+  }
+
+  .rank-banner {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .rank-badge {
+    font-size: 1.6rem;
+  }
+
+  .rank-title {
+    font-size: 0.95rem;
+  }
+
+  .rank-pts {
+    font-size: 1.1rem;
   }
 }
 </style>

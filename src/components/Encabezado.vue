@@ -136,14 +136,14 @@ onBeforeUnmount(() => {
         <!-- Dropdown -->
         <div v-if="userMenuAbierto" class="dropdown">
           <button type="button" class="dropdown-item" @click="irAPerfil">
-            👤 Mi perfil
+            Mi perfil
           </button>
           <button
             type="button"
             class="dropdown-item danger"
             @click="cerrarSesion"
           >
-            🚪 Cerrar sesión
+            Cerrar sesión
           </button>
         </div>
       </li>

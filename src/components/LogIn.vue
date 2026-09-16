@@ -106,7 +106,10 @@ async function handleLogin() {
 </template>
 
 <style scoped>
-/* ===== TODO TU CSS ORIGINAL INTACTO ===== */
+span {
+  color: #2e8b57;
+}
+
 .contenedor-Login {
   display: flex;
   min-height: 100vh;

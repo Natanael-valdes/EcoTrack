@@ -79,7 +79,7 @@ async function handlePost() {
 
   <!-- Si NO está logueado: mensaje -->
   <div v-else class="post-box post-box-guest">
-    <p class="guest-text">🔒 Inicia sesión para publicar</p>
+    <p class="guest-text">Inicia sesión para publicar</p>
     <button class="login-cta" @click="irALogin">Iniciar sesión</button>
   </div>
 </template>
