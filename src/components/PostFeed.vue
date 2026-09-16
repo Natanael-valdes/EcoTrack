@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from "vue";
-import { posts, removePost } from "../stores/posts";
+import { computed, onMounted } from "vue";
+import { usePostsStore } from "../stores/posts";
+import { useAuthStore } from "../stores/auth";
 
 const props = defineProps({
   limit: {
@@ -9,31 +10,42 @@ const props = defineProps({
   },
 });
 
-const displayedPosts = computed(() => {
-  if (!props.limit || props.limit <= 0) return posts;
-  return posts.slice(0, props.limit);
+const postsStore = usePostsStore();
+const authStore = useAuthStore();
+
+onMounted(() => {
+  postsStore.loadPosts();
 });
+
+const displayedPosts = computed(() => {
+  if (!props.limit || props.limit <= 0) return postsStore.posts;
+  return postsStore.posts.slice(0, props.limit);
+});
+
+function canDelete(post) {
+  return authStore.user && post.user_id === authStore.user.id;
+}
 </script>
 
 <template>
   <div id="postsContainer">
     <div v-for="post in displayedPosts" :key="post.id" class="post">
-      <h4>{{ post.user }}</h4>
+      <h4>{{ post.username }}</h4>
 
       <p v-if="post.text">{{ post.text }}</p>
 
-      <img v-if="post.image" :src="post.image" alt="" />
+      <img v-if="post.image_url" :src="post.image_url" alt="" />
 
-      <button v-if="post.own" class="delete-btn" @click="removePost(post.id)">
+      <button
+        v-if="canDelete(post)"
+        class="delete-btn"
+        @click="postsStore.removePost(post.id)"
+      >
         Eliminar
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-/* ...tu CSS tal cual, no lo toques... */
-</style>
 
 <style scoped>
 #postsContainer {
@@ -87,22 +99,16 @@ const displayedPosts = computed(() => {
   flex: 1;
 }
 
-/* =========================================
-   Imagen
-   ========================================= */
 .post img {
   width: 100%;
   height: 160px;
-  object-fit: cover; /* recorta sin deformar */
+  object-fit: cover;
   border-radius: 8px;
 }
 
-/* =========================================
-   Botón eliminar
-   ========================================= */
 .delete-btn {
   align-self: flex-end;
-  margin-top: auto; /* lo pega al fondo de la caja */
+  margin-top: auto;
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
   background: transparent;
@@ -120,21 +126,15 @@ const displayedPosts = computed(() => {
   color: #ffffff;
 }
 
-/* =========================================
-   Responsive → 2 por fila en tablet
-   ========================================= */
 @media (max-width: 900px) {
   .post {
-    flex: 0 0 calc((100% - 1.25rem) / 2); /* 2 por fila */
+    flex: 0 0 calc((100% - 1.25rem) / 2);
   }
 }
 
-/* =========================================
-   Responsive → 1 por fila en móvil
-   ========================================= */
 @media (max-width: 600px) {
   .post {
-    flex: 0 0 100%; /* 1 por fila */
+    flex: 0 0 100%;
   }
 }
 </style>

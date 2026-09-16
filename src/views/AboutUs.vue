@@ -1,13 +1,13 @@
 <script setup>
-import CarruselTeam from "../components/CarruselTeam.vue";
-import EcoTeam from "../components/EcoTeam.vue";
 import Encabezado from "../components/Encabezado.vue";
 import Footer from "../components/Footer.vue";
+import HeroAbout from "../components/HeroAbout.vue";
+import MeettheTeam from "../components/MeettheTeam.vue";
 </script>
 
 <template>
   <encabezado />
-  <CarruselTeam />
-  <EcoTeam />
+  <HeroAbout />
+  <MeettheTeam />
   <Footer />
 </template>

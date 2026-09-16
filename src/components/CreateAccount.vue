@@ -9,34 +9,47 @@ const authStore = useAuthStore();
 // Estado del formulario
 const email = ref("");
 const password = ref("");
+const confirmPassword = ref("");
 const localError = ref("");
+const successMessage = ref("");
 const submitting = ref(false);
 
 // Navegación
-function botonMover() {
-  router.push("/create-account");
+function irALogin() {
+  router.push("/");
 }
 
-function btonPassword() {
-  router.push("/restore-password");
-}
-
-// Login real con Supabase
-async function handleLogin() {
+// Registro con Supabase
+async function handleSignUp() {
   localError.value = "";
+  successMessage.value = "";
 
-  if (!email.value || !password.value) {
-    localError.value = "Email y contraseña son obligatorios";
+  if (!email.value || !password.value || !confirmPassword.value) {
+    localError.value = "Todos los campos son obligatorios";
+    return;
+  }
+
+  if (password.value.length < 6) {
+    localError.value = "La contraseña debe tener al menos 6 caracteres";
+    return;
+  }
+
+  if (password.value !== confirmPassword.value) {
+    localError.value = "Las contraseñas no coinciden";
     return;
   }
 
   submitting.value = true;
 
   try {
-    await authStore.signIn(email.value, password.value);
-    router.push("/home");
+    await authStore.signUp(email.value, password.value);
+    successMessage.value = "¡Cuenta creada! Redirigiendo al login...";
+
+    setTimeout(() => {
+      router.push("/");
+    }, 1500);
   } catch (err) {
-    localError.value = err.message || "Credenciales incorrectas";
+    localError.value = err.message || "No se pudo crear la cuenta";
   } finally {
     submitting.value = false;
   }
@@ -66,37 +79,48 @@ async function handleLogin() {
       <!-- Formulario -->
       <section class="derecha">
         <div class="login">
-          <h2>Log in to <span>EcoTrack</span></h2>
+          <h2>Create your <span>EcoTrack</span> account</h2>
 
-          <form @submit.prevent="handleLogin" class="formulario-log">
+          <form @submit.prevent="handleSignUp" class="formulario-log">
             <input
               v-model="email"
-              type="text"
-              placeholder="Email or Phone number"
+              type="email"
+              placeholder="Email"
               class="caja-texto"
               autocomplete="email"
             />
             <input
               v-model="password"
               type="password"
-              placeholder="password"
+              placeholder="Password (min. 6 characters)"
               class="caja-texto"
-              autocomplete="current-password"
+              autocomplete="new-password"
+            />
+            <input
+              v-model="confirmPassword"
+              type="password"
+              placeholder="Confirm password"
+              class="caja-texto"
+              autocomplete="new-password"
             />
 
             <p v-if="localError" class="error-msg">{{ localError }}</p>
+            <p v-if="successMessage" class="success-msg">
+              {{ successMessage }}
+            </p>
 
             <input
               type="submit"
-              :value="submitting ? 'Logging in...' : 'Log in'"
+              :value="submitting ? 'Creating account...' : 'Create account'"
               class="botoncito"
               :disabled="submitting"
             />
           </form>
 
-          <a href="#" @click.prevent="btonPassword">Forgotten password?</a>
-
-          <button class="crear" @click="botonMover">Create new account</button>
+          <p class="already">
+            Already have an account?
+            <a href="" @click.prevent="irALogin">Log in</a>
+          </p>
 
           <p class="Eco">®EcoTrack</p>
         </div>
@@ -106,7 +130,7 @@ async function handleLogin() {
 </template>
 
 <style scoped>
-/* ===== TODO TU CSS ORIGINAL INTACTO ===== */
+/* ===== MISMO ESTILO QUE LogIn.vue ===== */
 .contenedor-Login {
   display: flex;
   min-height: 100vh;
@@ -197,34 +221,21 @@ input:focus {
   cursor: not-allowed;
 }
 
-.login a {
-  justify-content: center;
+.already {
   text-align: center;
-  display: block;
   color: #111;
+  font-size: 15px;
+  margin: 10px 0 30px;
+}
+
+.already a {
+  color: #2d935e;
+  font-weight: 600;
   text-decoration: none;
-  margin-bottom: 40px;
 }
 
-.login a:hover {
+.already a:hover {
   text-decoration: underline;
-}
-
-.crear {
-  width: 100%;
-  height: 35px;
-  background-color: white;
-  color: black;
-  border-radius: 30px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  transition: 0.3s;
-  border: gray;
-}
-
-.crear:hover {
-  background-color: #e0e0e0;
 }
 
 .Eco {
@@ -234,7 +245,6 @@ input:focus {
   font-size: 18px;
 }
 
-/* ===== ÚNICO NUEVO: estilos del mensaje de error ===== */
 .error-msg {
   margin: 0 0 12px;
   padding: 0.65rem 0.9rem;
@@ -242,6 +252,17 @@ input:focus {
   border: 1px solid #f5c6c2;
   border-radius: 10px;
   color: #b03a2e;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.success-msg {
+  margin: 0 0 12px;
+  padding: 0.65rem 0.9rem;
+  background: #eef7ed;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  color: #2d5a27;
   font-size: 0.85rem;
   text-align: center;
 }
@@ -270,8 +291,6 @@ input:focus {
     width: 100%;
     max-width: 300px;
     margin-top: 20px;
-    right: auto;
-    top: auto;
   }
 
   .derecha {
