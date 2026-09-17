@@ -115,30 +115,53 @@ span {
   min-height: 100vh;
 }
 
+/* =========================================================
+   PANEL IZQUIERDO — Layout con 3 zonas
+   (logo arriba · collage centrado · h2 abajo)
+   ========================================================= */
 .izquierda-Login {
   width: 50%;
   padding: 50px;
   position: relative;
+
+  /* 👇 layout vertical en 3 zonas */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-sizing: border-box;
+  min-height: 100vh;
 }
 
+/* --- LOGO: arriba a la izquierda --- */
 .logo {
   width: 100px;
   height: 100px;
-  margin-bottom: 150px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
+/* --- COLLAGE: centrado vertical y horizontal en su zona --- */
+.collage {
+  position: absolute;
+  top: 50%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  max-width: 70%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* --- H2: abajo a la izquierda --- */
 .izquierda-Login h2 {
   font-size: 40px;
   font-weight: 700;
   line-height: 1.05;
   color: #111;
-}
-
-.collage {
-  position: absolute;
-  width: 350px;
-  right: 70px;
-  top: 90px;
+  margin: 0;
+  max-width: 90%;
 }
 
 .derecha {
@@ -250,42 +273,52 @@ input:focus {
 }
 
 @media (max-width: 900px) {
+  /* Contenedor principal en columna */
   .contenedor-Login {
     flex-direction: column;
-    min-height: auto;
+    min-height: 100vh;
   }
 
+  /* Panel izquierdo: solo el logo, centrado */
   .izquierda-Login {
     width: 100%;
-    padding: 30px;
+    min-height: auto;
+    padding: 2.5rem 1.5rem 1.5rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: static; /* quita el posicionamiento relativo */
   }
 
+  /* Logo centrado, tamaño cómodo */
   .logo {
-    margin-bottom: 20px;
+    width: 110px;
+    height: 110px;
+    margin: 0;
+  }
+
+  /* Ocultar collage y h2 en móvil */
+  .collage {
+    display: none;
   }
 
   .izquierda-Login h2 {
-    font-size: 28px;
+    display: none;
   }
 
-  .collage {
-    position: static;
-    width: 100%;
-    max-width: 300px;
-    margin-top: 20px;
-    right: auto;
-    top: auto;
-  }
-
+  /* Panel derecho (formulario) va abajo, ancho completo */
   .derecha {
     width: 100%;
     border-left: none;
     border-top: 1px solid #ddd;
-    padding: 30px 0;
+    padding: 2rem 1.5rem 3rem;
+    min-height: auto;
   }
 
   .login {
-    width: 90%;
+    width: 100%;
+    max-width: 420px;
   }
 }
 </style>
