@@ -268,40 +268,52 @@ input:focus {
 }
 
 @media (max-width: 900px) {
+  /* Contenedor principal en columna */
   .contenedor-Login {
     flex-direction: column;
-    min-height: auto;
+    min-height: 100vh;
   }
 
+  /* Panel izquierdo: solo el logo, centrado */
   .izquierda-Login {
     width: 100%;
-    padding: 30px;
+    min-height: auto;
+    padding: 2.5rem 1.5rem 1.5rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: static; /* quita el posicionamiento relativo */
   }
 
+  /* Logo centrado, tamaño cómodo */
   .logo {
-    margin-bottom: 20px;
+    width: 110px;
+    height: 110px;
+    margin: 0;
+  }
+
+  /* Ocultar collage y h2 en móvil */
+  .collage {
+    display: none;
   }
 
   .izquierda-Login h2 {
-    font-size: 28px;
+    display: none;
   }
 
-  .collage {
-    position: static;
-    width: 100%;
-    max-width: 300px;
-    margin-top: 20px;
-  }
-
+  /* Panel derecho (formulario) va abajo, ancho completo */
   .derecha {
     width: 100%;
     border-left: none;
     border-top: 1px solid #ddd;
-    padding: 30px 0;
+    padding: 2rem 1.5rem 3rem;
+    min-height: auto;
   }
 
   .login {
-    width: 90%;
+    width: 100%;
+    max-width: 420px;
   }
 }
 </style>
